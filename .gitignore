@@ -45,3 +45,5 @@ bin/
 *.dat
 *.pid
 *.seed
+
+config.yaml
