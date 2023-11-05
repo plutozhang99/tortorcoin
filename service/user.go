@@ -1,21 +1,18 @@
 package service
 
 import (
+	"errors"
 	"fmt"
+	"gorm.io/gorm"
 	"math/rand"
 	"tortorCoin/internal/utils"
 	"tortorCoin/model"
 )
 
-// TODO: Add more error type to give more information to the user
 // TODO: Add Authentication
 
 // Register 调用/model/user.go中的User结构体，还有createUser方法做用户注册
 func Register(username string, password string, account string) (*model.User, error) {
-	if model.CheckAccountExist(account) {
-		utils.Log.Info("Account already exists")
-		return nil, utils.ErrAccountExists
-	}
 	for {
 		randomNumber := rand.Intn(10000)
 		uniqueUsername := fmt.Sprintf("%s#%04d", username, randomNumber)
@@ -37,9 +34,14 @@ func Register(username string, password string, account string) (*model.User, er
 }
 
 // Login 调用/model/user.go中的User结构体，还有getUserByUserName方法做用户登录
-func Login(username string, password string) (*model.User, error) {
-	user, err := model.GetUserByUserName(username)
+func Login(account string, password string) (*model.User, error) {
+	user, err := model.GetUserByAccount(account)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.Log.Info("User not found: ", account)
+			return nil, gorm.ErrRecordNotFound
+
+		}
 		utils.Log.Error("Failed to get user by userName: ", err)
 		return nil, err
 	}

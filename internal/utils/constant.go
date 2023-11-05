@@ -18,5 +18,16 @@ func (e ErrorType) Error() string {
 }
 
 const (
-	ErrAccountExists ErrorType = "account already exists"
+	ErrAccountExists          ErrorType = "account already exists"
+	ErrUserNotFound           ErrorType = "user not found"
+	ErrPairNotFound           ErrorType = "pair not found"
+	ErrPaymentFailed          ErrorType = "payment failed"
+	ErrPaymentHistoryNotFound ErrorType = "payment history not found"
+	ErrInsertFailed           ErrorType = "insert failed"
+	ErrUpdateFailed           ErrorType = "update failed"
+	ErrGetPaymentFailed       ErrorType = "get payment failed"
+	ErrGetPairFailed          ErrorType = "get pair failed"
+	ErrPairAlreadyExists      ErrorType = "pair already exists"
+	ErrGetUserFailed          ErrorType = "get user failed"
+	ErrGetRecordFailed        ErrorType = "get record failed"
 )

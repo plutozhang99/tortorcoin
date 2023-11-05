@@ -49,12 +49,17 @@ func CreateUser(userName string, password string, account string) (*User, error)
 		Account:  account,
 	}
 
-	if err := database.GetDB().Create(user).Error; err != nil {
-		utils.Log.Error("Failed to create user: ", err)
-		return nil, err
+	err := CheckAccountExist(account)
+	if err == false {
+		if err := database.GetDB().Create(user).Error; err != nil {
+			utils.Log.Error("Failed to create user: ", err)
+			return nil, utils.ErrInsertFailed
+		}
+		return user, nil
+	} else {
+		return nil, utils.ErrAccountExists
 	}
 
-	return user, nil
 }
 
 // GetUserByField returns a user by a given field and value.
@@ -64,10 +69,10 @@ func GetUserByField(field string, value interface{}) (*User, error) {
 	if err := database.GetDB().Where(field+" = ?", value).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.Log.Info("User not found: ", value)
-			return nil, gorm.ErrRecordNotFound
+			return nil, utils.ErrUserNotFound
 		}
 		utils.Log.Error("Failed to retrieve user: ", err)
-		return nil, err
+		return nil, utils.ErrGetUserFailed
 	}
 
 	return &user, nil
@@ -92,7 +97,7 @@ func GetUserByAccount(account string) (*User, error) {
 func UpdateUser(userID uint, user *User) error {
 	if err := database.GetDB().Model(&User{}).Where("id = ?", userID).Updates(user).Error; err != nil {
 		utils.Log.Error("Failed to update user: ", err)
-		return err
+		return utils.ErrUpdateFailed
 	}
 	return nil
 }
@@ -100,19 +105,19 @@ func UpdateUser(userID uint, user *User) error {
 // CheckUsernameExist checks if a user exists by userName. Returns true if user exists.
 func CheckUsernameExist(userName string) bool {
 	// Call GetUserByUserName to check if user exists.
-	user, _ := GetUserByUserName(userName)
-	if user != nil {
-		return true
+	_, err := GetUserByUserName(userName)
+	if err == utils.ErrUserNotFound {
+		return false
 	}
-	return false
+	return true
 }
 
 // CheckAccountExist checks if a user exists by account. Returns true if user exists.
 func CheckAccountExist(account string) bool {
 	// Call GetUserByAccount to check if user exists.
-	user, _ := GetUserByAccount(account)
-	if user != nil {
-		return true
+	_, err := GetUserByAccount(account)
+	if err == utils.ErrUserNotFound {
+		return false
 	}
-	return false
+	return true
 }

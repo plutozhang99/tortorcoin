@@ -45,11 +45,20 @@ func CreatePair(firstUserName string, secondUserName string) (*Pair, error) {
 		Status:         string(utils.Pending),
 	}
 
-	if err := database.GetDB().Create(pair).Error; err != nil {
-		return nil, err
+	_, errFirst := GetPairByUserName(firstUserName)
+	_, errSecond := GetPairByUserName(secondUserName)
+
+	if errFirst == utils.ErrPairNotFound && errSecond == utils.ErrPairNotFound {
+		if err := database.GetDB().Create(pair).Error; err != nil {
+			utils.Log.Error("Failed to create pair: ", err)
+			return nil, utils.ErrInsertFailed
+		}
+
+		return pair, nil
+	} else {
+		return nil, utils.ErrPairAlreadyExists
 	}
 
-	return pair, nil
 }
 
 // GetPairByMatchID returns a pair that is not unpaired by matchID.
@@ -57,11 +66,11 @@ func GetPairByMatchID(matchID string) (*Pair, error) {
 	pair := &Pair{}
 	if err := database.GetDB().Where("match_id = ? and is_unpaired = ? and status = ?", matchID, false, utils.Success).First(pair).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.Log.Error("Failed to get pair by matchID: ", err)
-			return nil, gorm.ErrRecordNotFound
+			utils.Log.Error("Pair not found with match id: ", matchID)
+			return nil, utils.ErrPairNotFound
 		} else {
 			utils.Log.Error("Failed to get pair by matchID: ", err)
-			return nil, err
+			return nil, utils.ErrGetPairFailed
 		}
 	}
 
@@ -73,11 +82,11 @@ func GetPairByUserName(userName string) (*Pair, error) {
 	pair := &Pair{}
 	if err := database.GetDB().Where("(first_user_name = ? or second_user_name = ?) and is_unpaired = ?", userName, userName, false).First(pair).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.Log.Error("Failed to get pair by userName: ", err)
-			return nil, gorm.ErrRecordNotFound
+			utils.Log.Error("Pair not found with userName: ", userName)
+			return nil, utils.ErrPairNotFound
 		} else {
 			utils.Log.Error("Failed to get pair by userName: ", err)
-			return nil, err
+			return nil, utils.ErrGetPairFailed
 		}
 	}
 
@@ -89,11 +98,11 @@ func GetPairStatusByMatchID(matchID string) (string, error) {
 	pair := &Pair{}
 	if err := database.GetDB().Where("match_id = ?", matchID).First(pair).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.Log.Error("Failed to get pair status by matchID: ", err)
-			return "", gorm.ErrRecordNotFound
+			utils.Log.Error("Pair not found with match id: ", matchID)
+			return "", utils.ErrPairNotFound
 		} else {
 			utils.Log.Error("Failed to get pair status by matchID: ", err)
-			return "", err
+			return "", utils.ErrGetPairFailed
 		}
 	}
 	return pair.Status, nil
@@ -103,11 +112,11 @@ func GetPairStatusByMatchID(matchID string) (string, error) {
 func UpdatePairStatus(matchID string, status string) error {
 	if err := database.GetDB().Model(&Pair{}).Where("match_id = ?", matchID).Update("status", status).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.Log.Error("Failed to update pair status: ", err)
-			return gorm.ErrRecordNotFound
+			utils.Log.Error("Pair not found with match id: ", matchID)
+			return utils.ErrPairNotFound
 		}
 		utils.Log.Error("Failed to update pair status: ", err)
-		return err
+		return utils.ErrUpdateFailed
 	}
 
 	return nil
@@ -117,11 +126,11 @@ func UpdatePairStatus(matchID string, status string) error {
 func UpdatePairIsUnpaired(matchID string, isUnpaired bool) error {
 	if err := database.GetDB().Model(&Pair{}).Where("match_id = ?", matchID).Update("is_unpaired", isUnpaired).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.Log.Error("Failed to update pair isUnpaired: ", err)
-			return gorm.ErrRecordNotFound
+			utils.Log.Error("Pair not found with match id: ", matchID)
+			return utils.ErrPairNotFound
 		}
 		utils.Log.Error("Failed to update pair isUnpaired: ", err)
-		return err
+		return utils.ErrUpdateFailed
 	}
 
 	return nil

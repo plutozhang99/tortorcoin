@@ -35,7 +35,7 @@ func CreatePaymentHistory(paymentID string, receiverID string, senderID string, 
 
 	if err := database.GetDB().Create(paymentHistory).Error; err != nil {
 		utils.Log.Error("Failed to create payment history: ", err)
-		return nil, err
+		return nil, utils.ErrInsertFailed
 	}
 
 	return paymentHistory, nil
@@ -46,11 +46,11 @@ func GetPaymentHistoryByUserID(userID string) ([]*PaymentHistory, error) {
 	var paymentHistories []*PaymentHistory
 	if err := database.GetDB().Where("receiver_id = ? or sender_id = ?", userID, userID).Find(&paymentHistories).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.Log.Error("Failed to get payment history by userID: ", err)
-			return nil, err
+			utils.Log.Error("Payment History not found by User Id: ", userID)
+			return nil, utils.ErrPaymentHistoryNotFound
 		}
 		utils.Log.Error("Failed to get payment history by userID: ", err)
-		return nil, err
+		return nil, utils.ErrGetPaymentFailed
 	}
 
 	return paymentHistories, nil
