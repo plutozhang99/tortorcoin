@@ -9,13 +9,12 @@ import (
 
 type User struct {
 	gorm.Model
-	UserID     uint   `gorm:"unique;not null;autoIncrement;primaryKey"`
+	UserID     uint   `gorm:"unique;not null;autoIncrement;primaryKey;index"`
 	Password   string `gorm:"not null"`
 	UserName   string `gorm:"unique;not null;index"`
-	NickName   string
 	CreatedAt  int64  `gorm:"autoCreateTime"`
 	UpdatedAt  int64  `gorm:"autoUpdateTime"`
-	MatchID    string `gorm:"default:'';index"`
+	MatchID    uint   `gorm:"default:''"`
 	CoinAmount int64  `gorm:"default:5"`
 	IsDeleted  bool   `gorm:"default:false"`
 }
@@ -25,7 +24,6 @@ func (u *User) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"userID":     u.UserID,
 		"userName":   u.UserName,
-		"nickName":   u.NickName,
 		"createdAt":  u.CreatedAt,
 		"updatedAt":  u.UpdatedAt,
 		"matchID":    u.MatchID,
@@ -42,7 +40,7 @@ func (*User) TableName() string {
 }
 
 // CreateUser creates a new user.
-func CreateUser(password string, userName string, nickName string) (*User, error) {
+func CreateUser(password string, userName string) (*User, error) {
 	hashedPassword, err := utils.HashPassword(password)
 	if err != nil {
 		utils.Log.Error("Failed to hash password: ", err)
@@ -52,7 +50,6 @@ func CreateUser(password string, userName string, nickName string) (*User, error
 	user := &User{
 		Password: hashedPassword,
 		UserName: userName,
-		NickName: nickName,
 	}
 
 	if err := database.GetDB().Create(user).Error; err != nil {
