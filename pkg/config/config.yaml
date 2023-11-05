@@ -1,0 +1,4 @@
+# /tortorCoin/pkg/config/config.yaml
+
+database:
+  dsn: "root:1234@tcp(localhost:3306)/TorTorCoin?charset=utf8mb4&parseTime=True&loc=Local"
