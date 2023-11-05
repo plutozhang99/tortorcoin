@@ -46,4 +46,7 @@ bin/
 *.pid
 *.seed
 
-config.yaml
+# ignore yaml files
+*.yaml
+*.yml
+
