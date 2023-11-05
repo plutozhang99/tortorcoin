@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"tortorCoin/model/database"

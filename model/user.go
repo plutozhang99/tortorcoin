@@ -12,6 +12,7 @@ type User struct {
 	UserID     uint   `gorm:"unique;not null;autoIncrement;primaryKey;index"`
 	Password   string `gorm:"not null"`
 	UserName   string `gorm:"unique;not null;index"`
+	Account    string `gorm:"unique;not null;index"`
 	CreatedAt  int64  `gorm:"autoCreateTime"`
 	UpdatedAt  int64  `gorm:"autoUpdateTime"`
 	MatchID    uint   `gorm:"default:''"`
@@ -24,6 +25,7 @@ func (u *User) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"userID":     u.UserID,
 		"userName":   u.UserName,
+		"account":    u.Account,
 		"createdAt":  u.CreatedAt,
 		"updatedAt":  u.UpdatedAt,
 		"matchID":    u.MatchID,
@@ -40,16 +42,11 @@ func (*User) TableName() string {
 }
 
 // CreateUser creates a new user.
-func CreateUser(password string, userName string) (*User, error) {
-	hashedPassword, err := utils.HashPassword(password)
-	if err != nil {
-		utils.Log.Error("Failed to hash password: ", err)
-		return nil, err
-	}
-
+func CreateUser(userName string, password string, account string) (*User, error) {
 	user := &User{
-		Password: hashedPassword,
+		Password: password,
 		UserName: userName,
+		Account:  account,
 	}
 
 	if err := database.GetDB().Create(user).Error; err != nil {
@@ -60,8 +57,8 @@ func CreateUser(password string, userName string) (*User, error) {
 	return user, nil
 }
 
-// getUserByField returns a user by a given field and value.
-func getUserByField(field string, value interface{}) (*User, error) {
+// GetUserByField returns a user by a given field and value.
+func GetUserByField(field string, value interface{}) (*User, error) {
 	var user User
 
 	if err := database.GetDB().Where(field+" = ?", value).First(&user).Error; err != nil {
@@ -78,12 +75,17 @@ func getUserByField(field string, value interface{}) (*User, error) {
 
 // GetUserByUserName returns a user by userName.
 func GetUserByUserName(userName string) (*User, error) {
-	return getUserByField("user_name", userName)
+	return GetUserByField("user_name", userName)
 }
 
 // GetUserByUserID returns a user by userID.
 func GetUserByUserID(userID uint) (*User, error) {
-	return getUserByField("id", userID)
+	return GetUserByField("id", userID)
+}
+
+// GetUserByAccount returns a user by account.
+func GetUserByAccount(account string) (*User, error) {
+	return GetUserByField("account", account)
 }
 
 // UpdateUser updates a user.
@@ -93,4 +95,24 @@ func UpdateUser(userID uint, user *User) error {
 		return err
 	}
 	return nil
+}
+
+// CheckUsernameExist checks if a user exists by userName. Returns true if user exists.
+func CheckUsernameExist(userName string) bool {
+	// Call GetUserByUserName to check if user exists.
+	user, _ := GetUserByUserName(userName)
+	if user != nil {
+		return true
+	}
+	return false
+}
+
+// CheckAccountExist checks if a user exists by account. Returns true if user exists.
+func CheckAccountExist(account string) bool {
+	// Call GetUserByAccount to check if user exists.
+	user, _ := GetUserByAccount(account)
+	if user != nil {
+		return true
+	}
+	return false
 }
