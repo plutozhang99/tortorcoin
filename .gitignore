@@ -50,6 +50,3 @@ bin/
 /pkg/config/*.yaml
 *.yaml
 *.yml
-
-
-
