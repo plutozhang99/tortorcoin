@@ -9,7 +9,7 @@ import (
 
 type User struct {
 	gorm.Model
-	UserID     string `gorm:"unique;not null;autoIncrement;primaryKey"`
+	UserID     uint   `gorm:"unique;not null;autoIncrement;primaryKey"`
 	Password   string `gorm:"not null"`
 	UserName   string `gorm:"unique;not null;index"`
 	NickName   string
@@ -45,7 +45,6 @@ func (*User) TableName() string {
 func CreateUser(password string, userName string, nickName string) (*User, error) {
 	hashedPassword, err := utils.HashPassword(password)
 	if err != nil {
-		// 处理错误
 		utils.Log.Error("Failed to hash password: ", err)
 		return nil, err
 	}
@@ -56,8 +55,7 @@ func CreateUser(password string, userName string, nickName string) (*User, error
 		NickName: nickName,
 	}
 
-	err = database.GetDB().Create(user).Error
-	if err != nil {
+	if err := database.GetDB().Create(user).Error; err != nil {
 		utils.Log.Error("Failed to create user: ", err)
 		return nil, err
 	}
@@ -83,44 +81,19 @@ func getUserByField(field string, value interface{}) (*User, error) {
 
 // GetUserByUserName returns a user by userName.
 func GetUserByUserName(userName string) (*User, error) {
-	var user User // 用于存储找到的用户
-
-	err := database.GetDB().Table(UserTableName).Where("user_name = ?", userName).First(&user).Error
-
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// 没有找到记录
-			utils.Log.Info("User not found: ", userName)
-			return nil, gorm.ErrRecordNotFound // 或者您可以返回自定义的错误，比如 ErrUserNotFound
-		}
-		// 查询过程中发生了其他错误
-		utils.Log.Error("Failed to retrieve user: ", err)
-		return nil, err
-	}
-
-	return &user, nil // 返回找到的用户
+	return getUserByField("user_name", userName)
 }
 
 // GetUserByUserID returns a user by userID.
-func GetUserByUserID(userID string) (*User, error) {
-	var user User
-
-	err := database.GetDB().Table(UserTableName).Where("user_id=?", userID).First(&user).Error
-
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// 没有找到记录
-			utils.Log.Info("User not found: ", userID)
-			return nil, gorm.ErrRecordNotFound // 或者您可以返回自定义的错误，比如 ErrUserNotFound
-		}
-		// 查询过程中发生了其他错误
-		utils.Log.Error("Failed to retrieve user: ", err)
-		return nil, err
-	}
-	return &user, nil // 返回找到的用户
+func GetUserByUserID(userID uint) (*User, error) {
+	return getUserByField("id", userID)
 }
 
 // UpdateUser updates a user.
-func UpdateUser(username string, user *User) error {
-	return database.GetDB().Table(UserTableName).Where("user_name = ?", username).Updates(user).Error
+func UpdateUser(userID uint, user *User) error {
+	if err := database.GetDB().Model(&User{}).Where("id = ?", userID).Updates(user).Error; err != nil {
+		utils.Log.Error("Failed to update user: ", err)
+		return err
+	}
+	return nil
 }
