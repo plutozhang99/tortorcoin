@@ -1,0 +1,4 @@
+# /tortorCoin/pkg/config/config.yaml
+
+database:
+  dsn: "database connection string"
