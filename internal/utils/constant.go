@@ -30,4 +30,5 @@ const (
 	ErrPairAlreadyExists      ErrorType = "pair already exists"
 	ErrGetUserFailed          ErrorType = "get user failed"
 	ErrGetRecordFailed        ErrorType = "get record failed"
+	ErrWrongPassword          ErrorType = "wrong password"
 )

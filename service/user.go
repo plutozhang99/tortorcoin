@@ -1,9 +1,7 @@
 package service
 
 import (
-	"errors"
 	"fmt"
-	"gorm.io/gorm"
 	"math/rand"
 	"tortorCoin/internal/utils"
 	"tortorCoin/model"
@@ -37,19 +35,22 @@ func Register(username string, password string, account string) (*model.User, er
 func Login(account string, password string) (*model.User, error) {
 	user, err := model.GetUserByAccount(account)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.Log.Info("User not found: ", account)
-			return nil, gorm.ErrRecordNotFound
-
-		}
 		utils.Log.Error("Failed to get user by userName: ", err)
-		return nil, err
+		return nil, utils.ErrGetUserFailed
 	}
 
 	if !utils.CheckPasswordHash(password, user.Password) {
 		utils.Log.Info("Wrong password")
-		return nil, nil
+		return nil, utils.ErrWrongPassword
 	}
 
-	return user, nil
+	// Generate JWT Token
+	// TODO: Generate JWT Token
+	token, err := GenerateJWTToken(user)
+	if err != nil {
+		utils.Log.Error("Failed to generate JWT Token: ", err)
+		return nil, err
+	}
+
+	return token, nil
 }
