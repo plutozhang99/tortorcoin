@@ -31,4 +31,5 @@ const (
 	ErrGetUserFailed          ErrorType = "get user failed"
 	ErrGetRecordFailed        ErrorType = "get record failed"
 	ErrWrongPassword          ErrorType = "wrong password"
+	ErrRegisterFailed         ErrorType = "register failed"
 )

@@ -19,12 +19,12 @@ func Register(username string, password string, account string) (*model.User, er
 			encryptedPassword, err := utils.HashPassword(password)
 			if err != nil {
 				utils.Log.Error("Failed to hash password: ", err)
-				return nil, err
+				return nil, utils.ErrRegisterFailed
 			}
 			user, err := model.CreateUser(uniqueUsername, encryptedPassword, account)
 			if err != nil {
 				utils.Log.Error("Failed to create user: "+user.UserName+" ", err)
-				return nil, err
+				return nil, utils.ErrRegisterFailed
 			}
 			return user, nil
 		}
@@ -46,11 +46,11 @@ func Login(account string, password string) (*model.User, error) {
 
 	// Generate JWT Token
 	// TODO: Generate JWT Token
-	token, err := GenerateJWTToken(user)
-	if err != nil {
-		utils.Log.Error("Failed to generate JWT Token: ", err)
-		return nil, err
-	}
+	//token, err := GenerateJWTToken(user)
+	//if err != nil {
+	//	utils.Log.Error("Failed to generate JWT Token: ", err)
+	//	return nil, err
+	//}
 
-	return token, nil
+	return nil, nil
 }
