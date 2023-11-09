@@ -3,11 +3,10 @@ package service
 import (
 	"fmt"
 	"math/rand"
+	"tortorCoin/internal/auth"
 	"tortorCoin/internal/utils"
 	"tortorCoin/model"
 )
-
-// TODO: Add Authentication
 
 // Register 调用/model/user.go中的User结构体，还有createUser方法做用户注册
 func Register(username string, password string, account string) (*model.User, error) {
@@ -32,25 +31,24 @@ func Register(username string, password string, account string) (*model.User, er
 }
 
 // Login 调用/model/user.go中的User结构体，还有getUserByUserName方法做用户登录
-func Login(account string, password string) (*model.User, error) {
+func Login(account string, password string) (*model.User, string, error) {
 	user, err := model.GetUserByAccount(account)
 	if err != nil {
 		utils.Log.Error("Failed to get user by userName: ", err)
-		return nil, utils.ErrGetUserFailed
+		return nil, "", utils.ErrGetUserFailed
 	}
 
 	if !utils.CheckPasswordHash(password, user.Password) {
 		utils.Log.Info("Wrong password")
-		return nil, utils.ErrWrongPassword
+		return nil, "", utils.ErrWrongPassword
 	}
 
-	// Generate JWT Token
-	// TODO: Generate JWT Token
-	//token, err := GenerateJWTToken(user)
-	//if err != nil {
-	//	utils.Log.Error("Failed to generate JWT Token: ", err)
-	//	return nil, err
-	//}
+	//Generate JWT Token
+	token, err := auth.GenerateJWT(user.Account)
+	if err != nil {
+		utils.Log.Error("Failed to generate JWT Token: ", err)
+		return nil, "", err
+	}
 
-	return nil, nil
+	return user, token, nil
 }
